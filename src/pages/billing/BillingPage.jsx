@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { ShoppingCart, Send, Save, CheckCircle, Search, User, Phone, MapPin, ArrowRight, ArrowLeft, Trash2, Printer, MessageSquare, Filter } from 'lucide-react';
+import { ShoppingCart, Send, Save, CheckCircle, Search, User, Phone, MapPin, ArrowRight, ArrowLeft, Trash2, Printer, MessageSquare, Filter, Minus, Plus } from 'lucide-react';
 
 export default function BillingPage() {
   const [medicines, setMedicines] = useState([]);
@@ -55,27 +55,46 @@ export default function BillingPage() {
     }
   }
 
+  // Add one unit, without allowing the selected quantity to exceed stock.
   const addToCart = (med) => {
-    const existing = cart.find(item => item.id === med.id);
-    if (existing) {
-      setCart(cart.map(item => item.id === med.id ? { ...item, qty: item.qty + 1 } : item));
-    } else {
-      setCart([...cart, { ...med, qty: 1 }]);
-    }
+    const availableStock = Number(med.stock || 0);
+    if (availableStock <= 0) return;
+
+    setCart(currentCart => {
+      const existing = currentCart.find(item => item.id === med.id);
+
+      if (existing) {
+        if (Number(existing.qty || 0) >= availableStock) return currentCart;
+
+        return currentCart.map(item =>
+          item.id === med.id
+            ? { ...item, qty: Number(item.qty || 0) + 1 }
+            : item
+        );
+      }
+
+      return [...currentCart, { ...med, qty: 1 }];
+    });
   };
 
+  // Decreasing quantity from 1 removes the medicine from the cart entirely.
   const updateQty = (id, delta) => {
-    setCart(cart.map(item => {
-      if (item.id === id) {
-        const newQty = item.qty + delta;
-        return newQty > 0 ? { ...item, qty: newQty } : null;
-      }
-      return item;
+    setCart(currentCart => currentCart.map(item => {
+      if (item.id !== id) return item;
+
+      const currentQty = Number(item.qty || 0);
+      const nextQty = currentQty + delta;
+      const availableStock = Number(item.stock || 0);
+
+      if (nextQty <= 0) return null;
+      if (delta > 0 && nextQty > availableStock) return item;
+
+      return { ...item, qty: nextQty };
     }).filter(Boolean));
   };
 
   const removeFromCart = (id) => {
-    setCart(cart.filter(item => item.id !== id));
+    setCart(currentCart => currentCart.filter(item => item.id !== id));
   };
 
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.selling_price || item.price || 0) * item.qty), 0);
@@ -248,24 +267,71 @@ export default function BillingPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
               {filteredMedicines.map(med => {
                 const inCart = cart.find(item => item.id === med.id);
+                const stock = Number(med.stock || 0);
+                const selectedQty = Number(inCart?.qty || 0);
+                const atStockLimit = selectedQty >= stock;
+
                 return (
                   <div
                     key={med.id}
-                    onClick={() => (med.stock || 0) > 0 && addToCart(med)}
-                    className={`bg-white p-4 rounded-3xl border transition flex flex-col justify-between space-y-3 cursor-pointer group shadow-2xs ${inCart ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200/80 hover:border-emerald-400'} ${(med.stock || 0) <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
+                    onClick={() => stock > 0 && addToCart(med)}
+                    className={`bg-white p-3 sm:p-4 rounded-3xl border transition flex flex-col justify-between space-y-3 cursor-pointer group shadow-2xs ${inCart ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200/80 hover:border-emerald-400'} ${stock <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
                   >
-                    <div className="space-y-1">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md inline-block max-w-full truncate">
                         {med.category || 'General'}
                       </span>
-                      <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-emerald-900">{med.name}</h4>
+                      <h4 className="font-bold text-slate-900 text-sm line-clamp-2 min-h-10 group-hover:text-emerald-900">
+                        {med.name}
+                      </h4>
                     </div>
-                    <div className="flex justify-between items-end pt-2 border-t border-slate-100">
-                      <span className="text-sm font-black text-emerald-700">Rs. {med.selling_price || med.price || 0}</span>
-                      <div className="flex items-center gap-1.5">
-                        {inCart && <span className="w-5 h-5 bg-emerald-700 text-white rounded-full text-[10px] font-bold flex items-center justify-center">{inCart.qty}</span>}
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${(med.stock || 0) > 5 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
-                          Stock: {med.stock || 0}
+
+                    <div className="flex justify-between items-end gap-2 pt-2 border-t border-slate-100">
+                      <span className="text-sm font-black text-emerald-700 shrink-0">
+                        Rs. {med.selling_price || med.price || 0}
+                      </span>
+
+                      <div className="flex flex-col items-end gap-1.5 min-w-0">
+                        {inCart && (
+                          <div
+                            className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 rounded-xl p-1"
+                            onClick={event => event.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              aria-label={`Decrease ${med.name} quantity`}
+                              title="Decrease quantity; removes item at 1"
+                              onClick={event => {
+                                event.stopPropagation();
+                                updateQty(med.id, -1);
+                              }}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
+                            >
+                              <Minus size={13} />
+                            </button>
+
+                            <span className="min-w-5 text-center text-xs font-black text-emerald-800 tabular-nums">
+                              {selectedQty}
+                            </span>
+
+                            <button
+                              type="button"
+                              aria-label={`Increase ${med.name} quantity`}
+                              title={atStockLimit ? 'Maximum available stock selected' : 'Add one more'}
+                              disabled={atStockLimit}
+                              onClick={event => {
+                                event.stopPropagation();
+                                addToCart(med);
+                              }}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                            >
+                              <Plus size={13} />
+                            </button>
+                          </div>
+                        )}
+
+                        <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-lg whitespace-nowrap ${stock > 5 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                          Stock: {stock}
                         </span>
                       </div>
                     </div>
