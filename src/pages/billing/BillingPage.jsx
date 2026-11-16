@@ -275,26 +275,26 @@ export default function BillingPage() {
                   <div
                     key={med.id}
                     onClick={() => stock > 0 && addToCart(med)}
-                    className={`bg-white p-2 sm:p-3 rounded-xl sm:rounded-2xl border transition flex flex-col justify-between gap-2 sm:gap-3 cursor-pointer group shadow-sm min-w-0 min-h-[116px] sm:min-h-[140px] ${inCart ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200/80 hover:border-emerald-400'} ${stock <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
+                    className={`bg-white p-2 sm:p-3 rounded-xl sm:rounded-2xl border transition flex flex-col justify-between gap-2 sm:gap-3 cursor-pointer group shadow-sm min-w-0 min-h-[138px] sm:min-h-[154px] ${inCart ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200/80 hover:border-emerald-400'} ${stock <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
                   >
-                    <div className="space-y-1 min-w-0">
+                    <div className="space-y-1.5 min-w-0">
                       <span className="text-[7px] sm:text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-1.5 sm:px-2 py-0.5 rounded-md inline-block max-w-full truncate">
                         {med.category || 'General'}
                       </span>
-                      <h4 className="font-bold text-slate-900 text-[10px] sm:text-sm leading-tight line-clamp-2 min-h-8 sm:min-h-10 break-words group-hover:text-emerald-900">
+                      <h4 className="font-extrabold text-slate-900 text-[11px] sm:text-[15px] leading-tight line-clamp-2 min-h-[2.25rem] sm:min-h-10 break-words group-hover:text-emerald-900">
                         {med.name}
                       </h4>
                     </div>
 
-                    <div className="flex flex-col items-start gap-1.5 pt-2 border-t border-slate-100">
+                    <div className="flex flex-col items-start gap-1.5 pt-2 border-t border-slate-100 w-full min-w-0">
                       <span className="text-[10px] sm:text-sm font-black text-emerald-700 shrink-0">
                         Rs. {med.selling_price || med.price || 0}
                       </span>
 
-                      <div className="flex flex-row items-center justify-between gap-1 w-full min-w-0">
+                      <div className="flex flex-col items-start gap-1.5 w-full min-w-0">
                         {inCart && (
                           <div
-                            className="flex items-center gap-0.5 bg-emerald-50 border border-emerald-100 rounded-lg p-0.5 shrink-0"
+                            className="inline-flex items-center gap-0.5 bg-emerald-50 border border-emerald-100 rounded-lg p-0.5 max-w-full"
                             onClick={event => event.stopPropagation()}
                           >
                             <button
@@ -305,7 +305,7 @@ export default function BillingPage() {
                                 event.stopPropagation();
                                 updateQty(med.id, -1);
                               }}
-                              className="w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center rounded-md sm:rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
+                              className="w-5 h-5 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded-md sm:rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
                             >
                               <Minus size={11} className="sm:w-[13px] sm:h-[13px]" />
                             </button>
@@ -323,14 +323,14 @@ export default function BillingPage() {
                                 event.stopPropagation();
                                 addToCart(med);
                               }}
-                              className="w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center rounded-md sm:rounded-lg bg-white border border-slate-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                              className="w-5 h-5 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded-md sm:rounded-lg bg-white border border-slate-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
                               <Plus size={11} className="sm:w-[13px] sm:h-[13px]" />
                             </button>
                           </div>
                         )}
 
-                        <span className={`text-[7px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg whitespace-nowrap ${stock > 5 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                        <span className={`inline-flex max-w-full text-[7px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg whitespace-nowrap ${stock > 5 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
                           Stock: {stock}
                         </span>
                       </div>
