@@ -2,7 +2,8 @@
 import React, {
   useState,
   useEffect,
-  useCallback
+  useCallback,
+  useRef
 } from 'react';
 
 import { supabase } from './lib/supabase';
@@ -78,6 +79,7 @@ export default function App() {
 
   const [session, setSession] = useState(null);
   const [clinicUser, setClinicUser] = useState(null);
+  const authUserIdRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -147,17 +149,32 @@ export default function App() {
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
 
       if (!mounted) return;
 
+      const nextUserId = newSession?.user?.id ?? null;
+      const previousUserId = authUserIdRef.current;
+
+      authUserIdRef.current = nextUserId;
       setSession(newSession);
-      setClinicUser(null);
 
-      setAuthError('');
-      setLogoutError('');
+      // Only re-verify the clinic profile when the signed-in identity changes.
+      // TOKEN_REFRESHED for the same user must not blank the portal or show
+      // the full-screen verification loader.
+      if (previousUserId !== nextUserId) {
+        setClinicUser(null);
+        setProfileLoading(Boolean(nextUserId));
+        setAuthError('');
+      }
 
-      setProfileLoading(Boolean(newSession));
+      if (event === 'SIGNED_OUT') {
+        setClinicUser(null);
+        setProfileLoading(false);
+        setLogoutError('');
+      } else if (event !== 'TOKEN_REFRESHED') {
+        setLogoutError('');
+      }
     });
 
 
@@ -177,6 +194,9 @@ export default function App() {
 
         const currentSession = data?.session ?? null;
 
+        // The auth listener may already have received INITIAL_SESSION.
+        // Keep the tracked ID aligned with the session read here.
+        authUserIdRef.current = currentSession?.user?.id ?? null;
         setSession(currentSession);
         setProfileLoading(Boolean(currentSession));
 
@@ -307,12 +327,15 @@ export default function App() {
   // 7. FETCH DASHBOARD AND APPLICATION DATA
   // ==================================================
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async ({ silent = false } = {}) => {
 
-    if (!session || !clinicUser) return;
+    if (!session?.user?.id || !clinicUser?.id) return;
 
-    setDataLoading(true);
-    setDataError('');
+    // Silent refreshes update the data without showing a syncing banner.
+    if (!silent) {
+      setDataLoading(true);
+      setDataError('');
+    }
 
     try {
 
@@ -552,26 +575,52 @@ export default function App() {
 
     } finally {
 
-      setDataLoading(false);
+      if (!silent) setDataLoading(false);
     }
 
-  }, [session, clinicUser, isAdmin]);
+  }, [session?.user?.id, clinicUser?.id, isAdmin]);
 
 
-  // REFRESH WHEN USER OR ACTIVE PAGE CHANGES
-
+  // INITIAL DATA LOAD: run when the verified account identity is ready.
+  // Do not reload the entire dashboard dataset on every internal navigation click.
   useEffect(() => {
-
-    if (session && clinicUser) {
+    if (session?.user?.id && clinicUser?.id) {
       fetchDashboardData();
     }
+  }, [session?.user?.id, clinicUser?.id, fetchDashboardData]);
 
-  }, [
-    session,
-    clinicUser,
-    activeTab,
-    fetchDashboardData
-  ]);
+
+  // REFRESH QUIETLY when the user returns to this browser tab/window.
+  // This avoids a full-screen loader and does not interrupt the current page.
+  useEffect(() => {
+    if (!session?.user?.id || !clinicUser?.id) return undefined;
+
+    let refreshInFlight = false;
+    let lastRefreshAt = Date.now();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState !== 'visible' || refreshInFlight) return;
+
+      const now = Date.now();
+      // visibilitychange and window.focus can fire together; debounce them.
+      if (now - lastRefreshAt < 30000) return;
+
+      lastRefreshAt = now;
+      refreshInFlight = true;
+
+      fetchDashboardData({ silent: true }).finally(() => {
+        refreshInFlight = false;
+      });
+    };
+
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    window.addEventListener('focus', refreshWhenVisible);
+
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+      window.removeEventListener('focus', refreshWhenVisible);
+    };
+  }, [session?.user?.id, clinicUser?.id, fetchDashboardData]);
 
 
   // ==================================================
@@ -1026,9 +1075,9 @@ export default function App() {
           SIDEBAR
       ============================================== */}
 
-      <aside className="w-full md:w-72 md:min-h-screen bg-white border-r border-slate-200/80 p-4 sm:p-6 flex flex-col justify-between shrink-0 shadow-sm">
+      <aside className="w-full md:w-72 md:min-h-screen bg-white border-r border-slate-200/80 p-3 sm:p-6 flex flex-col justify-between shrink-0 shadow-sm">
 
-        <div className="space-y-5 md:space-y-8">
+        <div className="space-y-3 sm:space-y-5 md:space-y-8">
 
 
           {/* CLINIC BRANDING */}
@@ -1083,7 +1132,7 @@ export default function App() {
 
           {/* NAVIGATION */}
 
-          <nav className="flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+          <nav className="grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-1.5">
 
             {visibleNavigationItems.map(item => {
 
@@ -1098,7 +1147,7 @@ export default function App() {
                     setActiveTab(item.id);
                     setDataError('');
                   }}
-                  className={`shrink-0 md:shrink w-auto md:w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3 rounded-xl md:rounded-2xl font-bold text-xs transition ${
+                  className={`min-w-0 w-full flex items-center justify-center md:justify-start gap-2 md:gap-3 px-2.5 sm:px-4 py-2.5 sm:py-3 rounded-xl md:rounded-2xl font-bold text-[10px] sm:text-xs transition ${
                     isActive
                       ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-700/20'
                       : 'text-slate-600 hover:bg-slate-100'
@@ -1107,7 +1156,7 @@ export default function App() {
 
                   <Icon size={17} />
 
-                  <span>{item.label}</span>
+                  <span className="truncate">{item.label}</span>
 
                 </button>
 

@@ -219,7 +219,7 @@ export default function BillingPage() {
   const totalCartQty = cart.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-4 sm:space-y-6 pb-24">
       {successMsg && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs p-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-sm">
           <CheckCircle size={16}/> {successMsg}
@@ -229,16 +229,16 @@ export default function BillingPage() {
       {step === 1 ? (
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Side Category Filter Sidebar */}
-          <div className="w-full lg:w-64 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm shrink-0 space-y-3 h-fit">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 text-slate-900 font-bold text-sm">
+          <div className="w-full lg:w-64 bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm shrink-0 space-y-2 sm:space-y-3 h-fit">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 text-slate-900 font-bold text-xs sm:text-sm">
               <Filter size={16} className="text-emerald-700"/> Categories
             </div>
-            <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0">
+            <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto pb-1 lg:pb-0 -mx-1 px-1">
               {categories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition text-left whitespace-nowrap ${selectedCategory === cat ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                  className={`shrink-0 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition text-left whitespace-nowrap ${selectedCategory === cat ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                 >
                   {cat}
                 </button>
@@ -248,7 +248,7 @@ export default function BillingPage() {
 
           {/* Right Side Search & Medicines Grid */}
           <div className="flex-1 space-y-4">
-            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
               <div className="relative w-full">
                 <Search size={18} className="absolute left-4 top-3.5 text-slate-400"/>
                 <input
@@ -256,15 +256,15 @@ export default function BillingPage() {
                   placeholder="Search medicines by name or category..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:border-emerald-500 font-medium"
+                  className="w-full pl-11 pr-3 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm outline-none focus:border-emerald-500 font-medium"
                 />
               </div>
-              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl shrink-0">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl shrink-0 self-end sm:self-auto">
                 {filteredMedicines.length} items
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
               {filteredMedicines.map(med => {
                 const inCart = cart.find(item => item.id === med.id);
                 const stock = Number(med.stock || 0);
@@ -275,26 +275,26 @@ export default function BillingPage() {
                   <div
                     key={med.id}
                     onClick={() => stock > 0 && addToCart(med)}
-                    className={`bg-white p-3 sm:p-4 rounded-3xl border transition flex flex-col justify-between space-y-3 cursor-pointer group shadow-2xs ${inCart ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200/80 hover:border-emerald-400'} ${stock <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
+                    className={`bg-white p-2 sm:p-3 rounded-xl sm:rounded-2xl border transition flex flex-col justify-between gap-2 sm:gap-3 cursor-pointer group shadow-sm min-w-0 min-h-[116px] sm:min-h-[140px] ${inCart ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200/80 hover:border-emerald-400'} ${stock <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
                   >
                     <div className="space-y-1 min-w-0">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md inline-block max-w-full truncate">
+                      <span className="text-[7px] sm:text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-1.5 sm:px-2 py-0.5 rounded-md inline-block max-w-full truncate">
                         {med.category || 'General'}
                       </span>
-                      <h4 className="font-bold text-slate-900 text-sm line-clamp-2 min-h-10 group-hover:text-emerald-900">
+                      <h4 className="font-bold text-slate-900 text-[10px] sm:text-sm leading-tight line-clamp-2 min-h-8 sm:min-h-10 break-words group-hover:text-emerald-900">
                         {med.name}
                       </h4>
                     </div>
 
-                    <div className="flex justify-between items-end gap-2 pt-2 border-t border-slate-100">
-                      <span className="text-sm font-black text-emerald-700 shrink-0">
+                    <div className="flex flex-col items-start gap-1.5 pt-2 border-t border-slate-100">
+                      <span className="text-[10px] sm:text-sm font-black text-emerald-700 shrink-0">
                         Rs. {med.selling_price || med.price || 0}
                       </span>
 
-                      <div className="flex flex-col items-end gap-1.5 min-w-0">
+                      <div className="flex flex-row items-center justify-between gap-1 w-full min-w-0">
                         {inCart && (
                           <div
-                            className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 rounded-xl p-1"
+                            className="flex items-center gap-0.5 bg-emerald-50 border border-emerald-100 rounded-lg p-0.5 shrink-0"
                             onClick={event => event.stopPropagation()}
                           >
                             <button
@@ -305,12 +305,12 @@ export default function BillingPage() {
                                 event.stopPropagation();
                                 updateQty(med.id, -1);
                               }}
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
+                              className="w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center rounded-md sm:rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
                             >
-                              <Minus size={13} />
+                              <Minus size={11} className="sm:w-[13px] sm:h-[13px]" />
                             </button>
 
-                            <span className="min-w-5 text-center text-xs font-black text-emerald-800 tabular-nums">
+                            <span className="min-w-4 sm:min-w-5 text-center text-[10px] sm:text-xs font-black text-emerald-800 tabular-nums">
                               {selectedQty}
                             </span>
 
@@ -323,14 +323,14 @@ export default function BillingPage() {
                                 event.stopPropagation();
                                 addToCart(med);
                               }}
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                              className="w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center rounded-md sm:rounded-lg bg-white border border-slate-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
-                              <Plus size={13} />
+                              <Plus size={11} className="sm:w-[13px] sm:h-[13px]" />
                             </button>
                           </div>
                         )}
 
-                        <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-lg whitespace-nowrap ${stock > 5 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                        <span className={`text-[7px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg whitespace-nowrap ${stock > 5 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
                           Stock: {stock}
                         </span>
                       </div>
@@ -341,16 +341,16 @@ export default function BillingPage() {
             </div>
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 shadow-2xl z-40">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-700 text-white p-2.5 rounded-2xl shadow-md">
-                  <ShoppingCart size={20}/>
+          <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 shadow-2xl z-40">
+            <div className="max-w-7xl mx-auto flex justify-between items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="bg-emerald-700 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md shrink-0">
+                  <ShoppingCart size={17} className="sm:w-5 sm:h-5"/>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Selected Cart</p>
-                  <p className="text-sm sm:text-base font-black text-slate-900">
-                    {totalCartQty} items • Subtotal: <span className="text-emerald-700">Rs. {subtotal.toFixed(2)}</span>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Selected Cart</p>
+                  <p className="text-[11px] sm:text-base font-black text-slate-900 leading-tight">
+                    {totalCartQty} items · <span className="text-emerald-700">Rs. {subtotal.toFixed(2)}</span>
                   </p>
                 </div>
               </div>
@@ -363,9 +363,9 @@ export default function BillingPage() {
                   }
                   setStep(2);
                 }}
-                className="px-6 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black text-sm shadow-lg transition flex items-center gap-2"
+                className="shrink-0 px-3 py-2.5 sm:px-6 sm:py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-sm shadow-lg transition flex items-center gap-1.5 sm:gap-2"
               >
-                Next: Patient Details & Billing <ArrowRight size={18}/>
+                <span className="sm:hidden">Next</span><span className="hidden sm:inline">Next: Patient Details & Billing</span> <ArrowRight size={15} className="sm:w-[18px] sm:h-[18px]"/>
               </button>
             </div>
           </div>
